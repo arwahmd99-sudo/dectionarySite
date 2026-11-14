@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مبادرة قاموسي الصغير - My Little Dictionary</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <!-- Confetti Library for celebrations -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #fdf2f8 0%, #f0fdf4 50%, #eff6ff 100%);
+            min-height: 100vh;
+        }
+        .star-pulse {
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+        .star-pulse:hover:not(:disabled) {
+            transform: scale(1.15);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+        }
+    </style>
+</head>
+<body class="text-slate-700">
+
+    <!-- Header Banner -->
+    <header class="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white shadow-lg py-6 px-4 mb-6">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3 text-center md:text-right">
+                <div class="bg-white/20 p-3 rounded-2xl backdrop-blur-md shadow-inner">
+                    <i class="fa-solid fa-book-bookmark text-4xl text-yellow-300"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-black tracking-wide drop-shadow">مبادرة قاموسي الصغير</h1>
+                    <p class="text-sm md:text-base text-pink-100 font-medium">الصف الرابع الابتدائي - لتعلم وتطوير المفردات الإنجليزية</p>
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap items-center justify-center gap-3">
+                <!-- Quick Stats Badge -->
+                <div class="flex items-center gap-3 bg-white/10 px-4 py-2 rounded-2xl backdrop-blur-md border border-white/20">
+                    <i class="fa-solid fa-calendar-days text-yellow-300 text-xl"></i>
+                    <div class="text-xs md:text-sm">
+                        <p class="font-bold">فترة المبادرة:</p>
+                        <p class="text-pink-100">٢٥ أكتوبر - ٢٠ ديسمبر (١٤ جمادى الأولى - ١١ رجب)</p>
+                    </div>
+                </div>
+
+                <!-- Teacher Lock/Unlock Button -->
+                <button id="teacherAuthBtn" onclick="handleTeacherAuthClick()" class="no-print flex items-center gap-2 bg-white text-purple-700 hover:bg-purple-50 px-4 py-2.5 rounded-2xl font-bold text-sm shadow-md transition">
+                    <i id="teacherAuthIcon" class="fa-solid fa-lock"></i>
+                    <span id="teacherAuthText">دخول المعلمة</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 pb-12">
+
+        <!-- Status Banner (View Only vs Teacher Mode) -->
+        <div id="modeBanner" class="no-print mb-6 p-3.5 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-3 bg-blue-50 border-blue-200 text-blue-800">
+            <div class="flex items-center gap-2 text-sm font-bold">
+                <i class="fa-solid fa-eye text-blue-600 text-lg"></i>
+                <span id="modeBannerText">وضع المشاهدة للأمهات والزوار: يمكنكِ الاطلاع على نجوم وتقدم الطالبات مباشرة.</span>
+            </div>
+            <div id="syncStatus" class="text-xs font-semibold flex items-center gap-1.5 bg-white px-3 py-1 rounded-full shadow-sm text-emerald-600">
+                <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> <span id="syncText">متصل ومُحدّث تلقائياً</span>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="no-print flex flex-wrap gap-2 mb-6 bg-white p-2 rounded-2xl shadow-sm border border-slate-100 justify-center md:justify-start">
+            <button onclick="switchTab('tracking')" id="btn-tracking" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md">
+                <i class="fa-solid fa-star"></i> جدول النجوم الأسبوعي
+            </button>
+            <button onclick="switchTab('parents')" id="btn-parents" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2 bg-slate-100 text-slate-600 hover:bg-slate-200">
+                <i class="fa-solid fa-trophy"></i> لوحة الشرف والترتيب
+            </button>
+            <!-- Teacher Only Tabs -->
+            <button onclick="switchTab('students')" id="btn-students" class="teacher-only hidden tab-btn px-5 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2 bg-slate-100 text-slate-600 hover:bg-slate-200">
+                <i class="fa-solid fa-users-gear"></i> إدارة الطالبات (إضافة / حذف)
+            </button>
+            <button onclick="switchTab('backup')" id="btn-backup" class="teacher-only hidden tab-btn px-5 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2 bg-slate-100 text-slate-600 hover:bg-slate-200">
+                <i class="fa-solid fa-database"></i> النسخ الاحتياطي والإعدادات
+            </button>
+        </div>
+
+        <!-- Class Selector Bar -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <span class="font-bold text-slate-700 whitespace-nowrap"><i class="fa-solid fa-school text-purple-500 ml-1"></i> اختر الفصل:</span>
+                <select id="activeClassSelect" onchange="changeActiveClass()" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 font-bold text-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-400 w-full sm:w-60">
+                    <option value="رابع / 1">رابع / 1</option>
+                    <option value="رابع / 2">رابع / 2</option>
+                    <option value="رابع / 3">رابع / 3</option>
+                </select>
+            </div>
+            <div class="flex items-center gap-2 bg-pink-50 text-pink-700 px-4 py-2 rounded-xl font-bold text-sm">
+                <i class="fa-solid fa-trophy text-yellow-500"></i>
+                <span id="classTotalStars">إجمالي نجوم الفصل: 0</span>
+            </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loadingIndicator" class="text-center py-12 bg-white rounded-2xl shadow-sm border border-slate-100 mb-6">
+            <i class="fa-solid fa-spinner fa-spin text-4xl text-purple-600 mb-3"></i>
+            <p class="font-bold text-slate-600">جاري تحميل بيانات الطالبات والنجوم...</p>
+        </div>
+
+        <!-- TAB 1: WEEKLY TRACKING -->
+        <div id="tab-tracking" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <div>
+                        <h2 class="text-xl font-black text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-award text-pink-500"></i> جدول المتابعة الأسبوعية لقاموسـي الصغير
+                        </h2>
+                        <p id="trackingSubtitle" class="text-sm text-slate-500 mt-1">متابعة التزام الطالبات بإحضار القاموس أسبوعياً.</p>
+                    </div>
+                </div>
+
+                <!-- Table Container -->
+                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                    <table class="w-full text-right border-collapse min-w-[900px]">
+                        <thead>
+                            <tr class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm">
+                                <th class="p-3.5 w-12 text-center">#</th>
+                                <th class="p-3.5">اسم الطالبة</th>
+                                <th class="p-3.5 text-center" title="٢٥ - ٣١ أكتوبر | ١٤ - ٢٠ جمادى الأولى">الأسبوع 1</th>
+                                <th class="p-3.5 text-center" title="١ - ٧ نوفمبر | ٢١ - ٢٧ جمادى الأولى">الأسبوع 2</th>
+                                <th class="p-3.5 text-center" title="٨ - ١٤ نوفمبر | ٢٨ جمادى الأولى - ٤ جمادى الآخرة">الأسبوع 3</th>
+                                <th class="p-3.5 text-center" title="١٥ - ٢١ نوفمبر | ٥ - ١١ جمادى الآخرة">الأسبوع 4</th>
+                                <th class="p-3.5 text-center" title="٢٢ - ٢٨ نوفمبر | ١٢ - ١٨ جمادى الآخرة">الأسبوع 5</th>
+                                <th class="p-3.5 text-center" title="٢٩ نوفمبر - ٥ ديسمبر | ١٩ - ٢٥ جمادى الآخرة">الأسبوع 6</th>
+                                <th class="p-3.5 text-center" title="٦ - ١٢ ديسمبر | ٢٦ جمادى الآخرة - ٢ رجب">الأسبوع 7</th>
+                                <th class="p-3.5 text-center" title="١٣ - ٢٠ ديسمبر | ٣ - ١١ رجب">الأسبوع 8</th>
+                                <th class="p-3.5 text-center bg-purple-700">المجموع</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trackingTableBody" class="divide-y divide-slate-100 text-sm">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Weeks Legend Footer -->
+                <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs text-slate-500 bg-slate-50 p-4 rounded-xl">
+                    <div><strong>الأسبوع 1:</strong> ٢٥ - ٣١ أكتوبر (١٤ - ٢٠ جمادى ١)</div>
+                    <div><strong>الأسبوع 2:</strong> ١ - ٧ نوفمبر (٢١ - ٢٧ جمادى ١)</div>
+                    <div><strong>الأسبوع 3:</strong> ٨ - ١٤ نوفمبر (٢٨ جمادى ١ - ٤ جمادى ٢)</div>
+                    <div><strong>الأسبوع 4:</strong> ١٥ - ٢١ نوفمبر (٥ - ١١ جمادى ٢)</div>
+                    <div><strong>الأسبوع 5:</strong> ٢٢ - ٢٨ نوفمبر (١٢ - ١٨ جمادى ٢)</div>
+                    <div><strong>الأسبوع 6:</strong> ٢٩ نوفمبر - ٥ ديسمبر (١٩ - ٢٥ جمادى ٢)</div>
+                    <div><strong>الأسبوع 7:</strong> ٦ - ١٢ ديسمبر (٢٦ جمادى ٢ - ٢ رجب)</div>
+                    <div><strong>الأسبوع 8:</strong> ١٣ - ٢٠ ديسمبر (٣ - ١١ رجب)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: STUDENTS MANAGEMENT (TEACHER ONLY) -->
+        <div id="tab-students" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <div>
+                        <h2 class="text-xl font-black text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-user-plus text-purple-500"></i> إدارة طالبات الفصل (<span id="manageClassNameTitle">رابع / 1</span>)
+                        </h2>
+                        <p class="text-sm text-slate-500">أضيفي أسماء الطالبات للفصل الحالي وسيتم حفظها مباشرة وتظهر للأمهات للمشاهدة فقط.</p>
+                    </div>
+                </div>
+
+                <!-- Add Student Form -->
+                <form onsubmit="addStudent(event)" class="flex flex-col sm:flex-row gap-3 mb-6 bg-purple-50 p-4 rounded-xl border border-purple-100">
+                    <input type="text" id="newStudentName" placeholder="أدخلي اسم الطالبة الثلاثي..." required
+                        class="flex-1 bg-white border border-purple-200 rounded-xl px-4 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-purple-400">
+                    <button type="submit" id="addStudentBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-6 py-2.5 rounded-xl transition shadow-md flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-plus"></i> إضافة طالبة
+                    </button>
+                </form>
+
+                <!-- Students List Table -->
+                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                    <table class="w-full text-right border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 text-sm">
+                                <th class="p-3 w-16 text-center">#</th>
+                                <th class="p-3">اسم الطالبة</th>
+                                <th class="p-3 text-center">إجمالي النجوم</th>
+                                <th class="p-3 text-center w-28">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTableBody" class="divide-y divide-slate-100 text-sm">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: PARENTS VIEW / LEADERBOARD -->
+        <div id="tab-parents" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <div>
+                        <h2 class="text-xl font-black text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-certificate text-amber-500"></i> لوحة شرف ونتائج الطالبات
+                        </h2>
+                        <p class="text-sm text-slate-500">ترتيب الطالبات المتميزات بناءً على مجموع النجوم المحققة.</p>
+                    </div>
+                    <div class="flex gap-2 no-print">
+                        <button onclick="window.print()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-sm transition flex items-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-print"></i> طباعة / حفظ PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Printable Report Card Header -->
+                <div id="parentReportContainer" class="space-y-4">
+                    <div class="bg-gradient-to-r from-pink-50 to-purple-50 p-4 rounded-2xl border border-purple-100 flex flex-col sm:flex-row justify-between items-center text-center sm:text-right gap-3">
+                        <div>
+                            <h3 class="font-black text-purple-800 text-lg">تقرير مبادرة "قاموسي الصغير"</h3>
+                            <p class="text-xs text-slate-600 mt-1">الفصل الدراسي: <span id="reportClassName" class="font-bold text-purple-700"></span> | الصف الرابع الابتدائي</p>
+                        </div>
+                        <div class="text-xs bg-white px-4 py-2 rounded-xl shadow-sm border border-purple-100 font-semibold text-slate-600">
+                            التاريخ: <span id="currentDate"></span>
+                        </div>
+                    </div>
+
+                    <!-- Parents Table -->
+                    <div class="overflow-x-auto rounded-xl border border-slate-200">
+                        <table class="w-full text-right border-collapse">
+                            <thead>
+                                <tr class="bg-slate-800 text-white text-sm">
+                                    <th class="p-3 w-16 text-center">المركز</th>
+                                    <th class="p-3">اسم الطالبة</th>
+                                    <th class="p-3 text-center">النجوم المحققة (من 8)</th>
+                                    <th class="p-3 text-center">التقدير / الوسام</th>
+                                </tr>
+                            </thead>
+                            <tbody id="parentsTableBody" class="divide-y divide-slate-100 text-sm">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Encouragement Footer for Mothers -->
+                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center text-amber-900 text-xs sm:text-sm">
+                        <i class="fa-solid fa-heart text-red-500 ml-1"></i> شكراً أمهاتنا الغاليات على دعمكن المستمر لبناتكن في إثراء حصيلتهن اللغوية وتألقهن في مبادرة "قاموسي الصغير"!
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: BACKUP & SETTINGS (TEACHER ONLY) -->
+        <div id="tab-backup" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-6">
+                <div>
+                    <h2 class="text-xl font-black text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-database text-purple-500"></i> النسخ الاحتياطي وإعدادات المعلمة
+                    </h2>
+                    <p class="text-sm text-slate-500 mt-1">تصدير نسخة احتياطية أو تغيير الرمز السري الخاص بكِ كمعلمة.</p>
+                </div>
+
+                <!-- Change PIN Section -->
+                <div class="bg-purple-50 p-5 rounded-2xl border border-purple-100">
+                    <h3 class="font-bold text-purple-900 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-key text-purple-600"></i> تغيير الرمز السري للمعلمة
+                    </h3>
+                    <p class="text-xs text-purple-700 mb-3">يُستخدم هذا الرمز لحماية الصفحة ومنع أي زائر من تعديل الأسماء أو النجوم.</p>
+                    <form onsubmit="updateTeacherPin(event)" class="flex flex-col sm:flex-row gap-3 max-w-md">
+                        <input type="password" id="newPinInput" placeholder="أدخلي الرمز السري الجديد (4 أرقام مثلاً)" required minlength="4"
+                            class="flex-1 bg-white border border-purple-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400">
+                        <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-5 py-2 rounded-xl text-sm transition">
+                            حفظ الرمز الجديد
+                        </button>
+                    </form>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Export Box -->
+                    <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-slate-800 mb-1 flex items-center gap-2">
+                                <i class="fa-solid fa-file-arrow-down text-indigo-600"></i> تصدير البيانات (ملف احتياطي)
+                            </h3>
+                            <p class="text-xs text-slate-500 mb-4">تنزيل ملف JSON يحتوي على جميع أسماء الطالبات والنجوم لجميع الفصول.</p>
+                        </div>
+                        <button onclick="exportData()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-download"></i> تحميل نسخة احتياطية
+                        </button>
+                    </div>
+
+                    <!-- Import Box -->
+                    <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-slate-800 mb-1 flex items-center gap-2">
+                                <i class="fa-solid fa-file-arrow-up text-emerald-600"></i> استيراد البيانات
+                            </h3>
+                            <p class="text-xs text-slate-500 mb-4">رفع ملف نسخة احتياطية سابق لاستعادة جميع الأسماء والدرجات.</p>
+                        </div>
+                        <label class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-sm cursor-pointer">
+                            <i class="fa-solid fa-upload"></i> اختيار ملف واستيراد
+                            <input type="file" id="importFile" accept=".json" onchange="importData(event)" class="hidden">
+                        </label>
+                    </div>
+
+                    <!-- Permanent HTML Export Box (Solves Preview Reset Permanently) -->
+                    <div class="bg-amber-50 p-5 rounded-2xl border border-amber-200 flex flex-col justify-between md:col-span-2">
+                        <div>
+                            <h3 class="font-bold text-amber-900 mb-1 flex items-center gap-2">
+                                <i class="fa-solid fa-cloud-arrow-up text-amber-600"></i> ربط قاعدة بيانات سحابية دائمة (للنشر على الإنترنت)
+                            </h3>
+                            <p class="text-xs text-amber-800 mb-3">إذا رفعتِ الموقع على استضافة مجانية (مثل Netlify أو GitHub Pages)، يمكنكِ لصق إعدادات مشروعكِ المجاني من Firebase هنا ليحفظ كل نجمة تضعينها وتظهر للزوار فوراً، أو استخدام الرابط الذكي أدناه:</p>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <input type="text" id="firebaseConfigInput" placeholder='الصقي كود firebaseConfig هنا (مثال: {"apiKey":"...","projectId":"..."})' 
+                                    class="flex-1 bg-white border border-amber-300 rounded-xl px-4 py-2 text-xs font-mono text-left dir-ltr focus:outline-none focus:ring-2 focus:ring-amber-500">
+                                <button onclick="saveCustomFirebaseConfig()" class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-4 py-2 rounded-xl text-xs transition whitespace-nowrap">
+                                    ربط وحفظ الإعدادات
+                                </button>
+                            </div>
+                            <div class="flex flex-wrap gap-3 pt-2 border-t border-amber-200/60">
+                                <button onclick="copyMagicLink()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-5 py-2 rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-sm">
+                                    <i class="fa-solid fa-share-nodes"></i> نسخ الرابط المحفوظ بالأسماء والنجوم
+                                </button>
+                                <button onclick="downloadStandaloneHTML()" class="bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold px-4 py-2 rounded-xl text-xs transition flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-floppy-disk"></i> تنزيل ملف الموقع محفوظاً (HTML)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Teacher Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl">
+            <div class="w-14 h-14 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-2xl mb-4 mx-auto">
+                <i class="fa-solid fa-user-lock"></i>
+            </div>
+            <h3 class="text-xl font-black text-slate-800 text-center mb-1">دخول المعلمة</h3>
+            <p class="text-xs text-slate-500 text-center mb-4">أدخلي الرمز السري لتفعيل وضع الإضافة والتعديل.<br><span class="text-purple-600 font-semibold">(الرمز الافتراضي أول مرة: 1234)</span></p>
+            <form onsubmit="verifyTeacherPin(event)" class="space-y-4">
+                <input type="password" id="pinInput" placeholder="أدخلي الرمز السري هنا..." required
+                    class="w-full text-center tracking-widest text-lg font-bold bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                <p id="pinErrorMsg" class="text-xs text-red-600 text-center font-bold hidden">الرمز السري غير صحيح، حاولي مرة أخرى.</p>
+                <div class="flex gap-2">
+                    <button type="button" onclick="closeLoginModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-sm transition">إلغاء</button>
+                    <button type="submit" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md">دخول</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Custom Modal for Notifications / Confirmations -->
+    <div id="customModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl transform transition-all scale-100">
+            <div id="modalIcon" class="w-12 h-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-xl mb-4 mx-auto">
+                <i class="fa-solid fa-bell"></i>
+            </div>
+            <h3 id="modalTitle" class="text-lg font-black text-slate-800 text-center mb-2">تنبيه</h3>
+            <p id="modalMessage" class="text-sm text-slate-600 text-center mb-6">الرسالة هنا...</p>
+            <div id="modalButtons" class="flex gap-3 justify-center">
+                <button onclick="closeModal()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-5 py-2 rounded-xl text-sm transition">حسناً</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK & Application Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, addDoc, updateDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global State
+        let db = null;
+        let auth = null;
+        let currentUser = null;
+        let isTeacherMode = false;
+        let currentTab = 'tracking';
+        let activeClass = 'رابع / 1';
+        let teacherPin = '1234';
+        let useCloudStorage = false;
+
+        const LOCAL_STORAGE_KEY = 'my_little_dict_students_v1';
+        const LOCAL_PIN_KEY = 'my_little_dict_pin_v1';
+        const LOCAL_FB_CONFIG_KEY = 'my_little_dict_fb_config_v1';
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'my-little-dictionary-app';
+        let firebaseConfig = null;
+
+        // =========================================================================
+        // 📌 أسهل طريقة لحفظ الأسماء في الكود للأبد:
+        // اكتبي أسماء طالبات كل فصل بين علامتي التنصيص "" وافصلي بينهن بفاصلة ، أو ,
+        // =========================================================================
+        const قائمة_طالبات_الفصول = {
+            "رابع / 1": [
+                // مثال: "سارة أحمد محمد", "نورة عبدالله العتيبي",
+            ],
+            "رابع / 2": [
+                // اكتبي أسماء طالبات رابع 2 هنا
+            ],
+            "رابع / 3": [
+                // اكتبي أسماء طالبات رابع 3 هنا
+            ]
+        };
+
+        // بيانات تفصيلية (تُحدّث تلقائياً عند نسخ الكود)
+        const EMBEDDED_INITIAL_DATA = [];
+
+        // 📌 ضعي إعدادات Firebase هنا إذا كنتِ سترفعين الموقع على الإنترنت ليحفظ السحابي تلقائياً للجميع:
+        const CUSTOM_FIREBASE_CONFIG = null; 
+        // =========================================================================
+
+        // Resolve Firebase Config from Environment, Custom Code, or Saved Settings
+        try {
+            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                firebaseConfig = JSON.parse(__firebase_config);
+            } else if (CUSTOM_FIREBASE_CONFIG) {
+                firebaseConfig = CUSTOM_FIREBASE_CONFIG;
+            } else {
+                const savedFb = localStorage.getItem(LOCAL_FB_CONFIG_KEY);
+                if (savedFb) firebaseConfig = JSON.parse(savedFb);
+            }
+            if (firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId) {
+                useCloudStorage = true;
+            }
+        } catch (e) {
+            console.warn("Firebase config parse error:", e);
+        }
+
+        function buildInitialStudents() {
+            // 1. Check if data is passed inside the URL (#data=...)
+            try {
+                if (window.location.hash && window.location.hash.startsWith('#data=')) {
+                    const encoded = window.location.hash.substring(6);
+                    const decodedJson = decodeURIComponent(escape(atob(encoded)));
+                    const parsedUrlData = JSON.parse(decodedJson);
+                    if (Array.isArray(parsedUrlData) && parsedUrlData.length > 0) {
+                        return parsedUrlData;
+                    }
+                }
+            } catch (e) {
+                console.warn("URL data parse error:", e);
+            }
+
+            // 2. Check detailed embedded data
+            if (EMBEDDED_INITIAL_DATA.length > 0) {
+                return [...EMBEDDED_INITIAL_DATA];
+            }
+
+            // 3. Build from simple Arabic class lists above
+            const generated = [];
+            let idx = 1;
+            for (const [clsName, namesList] of Object.entries(قائمة_طالبات_الفصول)) {
+                if (Array.isArray(namesList)) {
+                    namesList.forEach(name => {
+                        if (name && name.trim()) {
+                            generated.push({
+                                id: 'fixed_stu_' + idx++,
+                                name: name.trim(),
+                                className: clsName,
+                                createdAt: idx,
+                                scores: { w1: false, w2: false, w3: false, w4: false, w5: false, w6: false, w7: false, w8: false }
+                            });
+                        }
+                    });
+                }
+            }
+            return generated;
+        }
+
+        let allStudents = buildInitialStudents();
+
+        function saveLocalFallback() {
+            try {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(allStudents));
+                localStorage.setItem(LOCAL_PIN_KEY, teacherPin);
+            } catch (e) {
+                console.error("Local save error:", e);
+            }
+        }
+
+        async function initApp() {
+            // Set Date
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('currentDate').innerText = new Date().toLocaleDateString('ar-SA', options);
+
+            if (!useCloudStorage) {
+                updateSyncIndicator(false);
+                loadLocalFallback();
+                return;
+            }
+
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                // Authenticate First (Rule 3)
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        currentUser = user;
+                        updateSyncIndicator(true);
+                        setupRealtimeListeners();
+                    }
+                });
+            } catch (error) {
+                console.error("Firebase Init Error, switching to local mode:", error);
+                useCloudStorage = false;
+                updateSyncIndicator(false);
+                loadLocalFallback();
+            }
+        }
+
+        function updateSyncIndicator(isCloud) {
+            const syncText = document.getElementById('syncText');
+            const syncDot = document.getElementById('syncDot');
+            if (isCloud) {
+                syncText.innerText = 'متصل بالسحابة (يُحفظ ويظهر للجميع فوراً)';
+                syncDot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+            } else {
+                syncText.innerText = 'حفظ محلي (اربطي قاعدة بيانات للنشر العام)';
+                syncDot.className = 'w-2 h-2 rounded-full bg-amber-500';
+            }
+        }
+
+        // Listen to Public Data (Rule 1 & Rule 2)
+        function setupRealtimeListeners() {
+            if (!currentUser) return;
+
+            // 1. Listen to Teacher PIN Settings
+            const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config');
+            onSnapshot(settingsRef, (docSnap) => {
+                if (docSnap.exists() && docSnap.data().pin) {
+                    teacherPin = docSnap.data().pin;
+                }
+            }, (err) => console.error("Settings listener error:", err));
+
+            // 2. Listen to Students Collection
+            const studentsCol = collection(db, 'artifacts', appId, 'public', 'data', 'students');
+            onSnapshot(studentsCol, async (snapshot) => {
+                // If cloud is empty on first run, seed initial embedded students if any
+                if (snapshot.empty && allStudents.length > 0 && isTeacherMode) {
+                    for (const stu of allStudents) {
+                        await addDoc(studentsCol, {
+                            name: stu.name,
+                            className: stu.className,
+                            createdAt: stu.createdAt || Date.now(),
+                            scores: stu.scores || { w1: false, w2: false, w3: false, w4: false, w5: false, w6: false, w7: false, w8: false }
+                        });
+                    }
+                    return;
+                }
+
+                allStudents = [];
+                snapshot.forEach((docSnap) => {
+                    allStudents.push({ id: docSnap.id, ...docSnap.data() });
+                });
+
+                // Sort by creation timestamp in memory (Rule 2)
+                allStudents.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+
+                document.getElementById('loadingIndicator').classList.add('hidden');
+                if (document.querySelectorAll('.tab-content:not(.hidden)').length === 0) {
+                    document.getElementById('tab-' + currentTab).classList.remove('hidden');
+                }
+                renderAll();
+            }, (error) => {
+                console.error("Students listener error:", error);
+                document.getElementById('loadingIndicator').innerHTML = '<p class="text-red-500 font-bold">حدث خطأ في جلب البيانات. يرجى تحديث الصفحة.</p>';
+            });
+        }
+
+        // Teacher Auth Controls
+        window.handleTeacherAuthClick = function() {
+            if (isTeacherMode) {
+                // Logout from Teacher Mode
+                isTeacherMode = false;
+                updateUIForRole();
+                switchTab('tracking');
+                showModal('تم الخروج', 'تم العودة إلى وضع المشاهدة فقط.', 'success');
+            } else {
+                // Open Login Modal
+                document.getElementById('pinInput').value = '';
+                document.getElementById('pinErrorMsg').classList.add('hidden');
+                document.getElementById('loginModal').classList.remove('hidden');
+                setTimeout(() => document.getElementById('pinInput').focus(), 100);
+            }
+        };
+
+        window.closeLoginModal = function() {
+            document.getElementById('loginModal').classList.add('hidden');
+        };
+
+        window.verifyTeacherPin = function(e) {
+            e.preventDefault();
+            const enteredPin = document.getElementById('pinInput').value.trim();
+            if (enteredPin === teacherPin) {
+                isTeacherMode = true;
+                closeLoginModal();
+                updateUIForRole();
+                showModal('أهلاً بكِ معلمتنا الفاضلة', 'تم تفعيل صلاحيات الإضافة والتعديل بنجاح.', 'success');
+            } else {
+                document.getElementById('pinErrorMsg').classList.remove('hidden');
+            }
+        };
+
+        window.updateTeacherPin = async function(e) {
+            e.preventDefault();
+            if (!isTeacherMode) return;
+            const newPin = document.getElementById('newPinInput').value.trim();
+            if (newPin.length < 4) return;
+
+            if (!useCloudStorage || !currentUser) {
+                teacherPin = newPin;
+                saveLocalFallback();
+                document.getElementById('newPinInput').value = '';
+                showModal('تم التحديث', 'تم تغيير الرمز السري للمعلمة بنجاح.', 'success');
+                return;
+            }
+
+            try {
+                const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config');
+                await setDoc(settingsRef, { pin: newPin }, { merge: true });
+                teacherPin = newPin;
+                document.getElementById('newPinInput').value = '';
+                showModal('تم التحديث', 'تم تغيير الرمز السري للمعلمة بنجاح.', 'success');
+            } catch (err) {
+                showModal('خطأ', 'تعذر تحديث الرمز السري.', 'error');
+            }
+        };
+
+        function updateUIForRole() {
+            const authBtn = document.getElementById('teacherAuthBtn');
+            const authIcon = document.getElementById('teacherAuthIcon');
+            const authText = document.getElementById('teacherAuthText');
+            const modeBanner = document.getElementById('modeBanner');
+            const modeBannerText = document.getElementById('modeBannerText');
+            const teacherOnlyElements = document.querySelectorAll('.teacher-only');
+
+            if (isTeacherMode) {
+                authBtn.className = 'no-print flex items-center gap-2 bg-amber-400 text-slate-900 hover:bg-amber-300 px-4 py-2.5 rounded-2xl font-bold text-sm shadow-md transition';
+                authIcon.className = 'fa-solid fa-lock-open';
+                authText.innerText = 'خروج المعلمة';
+                modeBanner.className = 'no-print mb-6 p-3.5 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-3 bg-emerald-50 border-emerald-200 text-emerald-800';
+                modeBannerText.innerText = 'وضع المعلمة مُفعّل: يمكنكِ إضافة الطالبات ومنح النجوم وسيتم حفظها مباشرة.';
+                teacherOnlyElements.forEach(el => el.classList.remove('hidden'));
+            } else {
+                authBtn.className = 'no-print flex items-center gap-2 bg-white text-purple-700 hover:bg-purple-50 px-4 py-2.5 rounded-2xl font-bold text-sm shadow-md transition';
+                authIcon.className = 'fa-solid fa-lock';
+                authText.innerText = 'دخول المعلمة';
+                modeBanner.className = 'no-print mb-6 p-3.5 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-3 bg-blue-50 border-blue-200 text-blue-800';
+                modeBannerText.innerText = 'وضع المشاهدة للأمهات والزوار: يمكنكِ الاطلاع على نجوم وتقدم الطالبات مباشرة.';
+                teacherOnlyElements.forEach(el => el.classList.add('hidden'));
+            }
+            renderAll();
+        }
+
+        function loadLocalFallback() {
+            try {
+                const savedPin = localStorage.getItem(LOCAL_PIN_KEY);
+                if (savedPin) teacherPin = savedPin;
+
+                // Only override with localStorage if URL hash wasn't explicitly opened
+                const hasUrlData = window.location.hash && window.location.hash.startsWith('#data=');
+                if (!hasUrlData) {
+                    const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+                    if (savedData) {
+                        const parsed = JSON.parse(savedData);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            allStudents = parsed;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error("Local read error:", e);
+            }
+            allStudents.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+            document.getElementById('loadingIndicator').classList.add('hidden');
+            if (document.querySelectorAll('.tab-content:not(.hidden)').length === 0) {
+                document.getElementById('tab-' + currentTab).classList.remove('hidden');
+            }
+            renderAll();
+        }
+
+        // Navigation & Class Selection
+        window.switchTab = function(tabId) {
+            if ((tabId === 'students' || tabId === 'backup') && !isTeacherMode) {
+                showModal('تنبيه', 'هذا القسم مخصص للمعلمة فقط.', 'error');
+                return;
+            }
+            currentTab = tabId;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('bg-gradient-to-r', 'from-pink-500', 'to-purple-600', 'text-white', 'shadow-md');
+                el.classList.add('bg-slate-100', 'text-slate-600', 'hover:bg-slate-200');
+            });
+
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            const activeBtn = document.getElementById('btn-' + tabId);
+            activeBtn.classList.remove('bg-slate-100', 'text-slate-600', 'hover:bg-slate-200');
+            activeBtn.classList.add('bg-gradient-to-r', 'from-pink-500', 'to-purple-600', 'text-white', 'shadow-md');
+
+            renderAll();
+        };
+
+        window.changeActiveClass = function() {
+            activeClass = document.getElementById('activeClassSelect').value;
+            document.getElementById('manageClassNameTitle').innerText = activeClass;
+            renderAll();
+        };
+
+        function getClassStudents() {
+            return allStudents.filter(s => s.className === activeClass);
+        }
+
+        function renderAll() {
+            renderTrackingTable();
+            renderStudentsTable();
+            renderParentsTable();
+        }
+
+        // Render Tracking Table (Tab 1)
+        function renderTrackingTable() {
+            const tbody = document.getElementById('trackingTableBody');
+            tbody.innerHTML = '';
+            const students = getClassStudents();
+            let classStarsCount = 0;
+
+            if (students.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="11" class="text-center py-8 text-slate-400 font-medium">لا توجد طالبات مسجلات في هذا الفصل حالياً.</td></tr>`;
+                document.getElementById('classTotalStars').innerText = 'إجمالي نجوم الفصل: 0';
+                return;
+            }
+
+            students.forEach((student, index) => {
+                let studentStars = 0;
+                const scores = student.scores || {};
+                let tr = document.createElement('tr');
+                tr.className = index % 2 === 0 ? 'bg-white hover:bg-slate-50/80 transition' : 'bg-slate-50/50 hover:bg-slate-50/80 transition';
+
+                let rowHtml = `
+                    <td class="p-3.5 text-center font-bold text-slate-400">${index + 1}</td>
+                    <td class="p-3.5 font-bold text-slate-800">${student.name}</td>
+                `;
+
+                for (let i = 1; i <= 8; i++) {
+                    const weekKey = 'w' + i;
+                    const hasStar = !!scores[weekKey];
+                    if (hasStar) studentStars++;
+
+                    if (isTeacherMode) {
+                        rowHtml += `
+                            <td class="p-3.5 text-center">
+                                <button onclick="toggleStar('${student.id}', '${weekKey}', event)" 
+                                    class="w-9 h-9 rounded-xl inline-flex items-center justify-center star-pulse transition shadow-sm ${hasStar ? 'bg-amber-400 text-white shadow-amber-200' : 'bg-slate-100 text-slate-300 hover:bg-slate-200'}">
+                                    <i class="fa-solid fa-star ${hasStar ? 'text-white' : 'text-slate-300'}"></i>
+                                </button>
+                            </td>
+                        `;
+                    } else {
+                        rowHtml += `
+                            <td class="p-3.5 text-center">
+                                <span class="w-9 h-9 rounded-xl inline-flex items-center justify-center ${hasStar ? 'bg-amber-400 text-white shadow-sm shadow-amber-200' : 'bg-slate-100 text-slate-200'}">
+                                    <i class="fa-solid fa-star"></i>
+                                </span>
+                            </td>
+                        `;
+                    }
+                }
+
+                classStarsCount += studentStars;
+                rowHtml += `
+                    <td class="p-3.5 text-center font-black text-purple-700 bg-purple-50/50">${studentStars} ⭐</td>
+                `;
+
+                tr.innerHTML = rowHtml;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('classTotalStars').innerText = `إجمالي نجوم الفصل: ${classStarsCount}`;
+        }
+
+        // Toggle Star in Firestore (Teacher Only)
+        window.toggleStar = async function(studentId, weekKey, event) {
+            if (!isTeacherMode) return;
+            const student = allStudents.find(s => s.id === studentId);
+            if (!student) return;
+
+            const currentScores = student.scores || {};
+            const newValue = !currentScores[weekKey];
+            const updatedScores = { ...currentScores, [weekKey]: newValue };
+
+            // Trigger Confetti immediately for snappy UX
+            if (newValue && event) {
+                const rect = event.currentTarget.getBoundingClientRect();
+                const x = (rect.left + rect.width / 2) / window.innerWidth;
+                const y = (rect.top + rect.height / 2) / window.innerHeight;
+
+                confetti({
+                    particleCount: 45,
+                    spread: 70,
+                    origin: { x: x, y: y },
+                    colors: ['#f59e0b', '#ec4899', '#8b5cf6', '#10b981']
+                });
+            }
+
+            if (!useCloudStorage || !currentUser) {
+                student.scores = updatedScores;
+                saveLocalFallback();
+                renderAll();
+                return;
+            }
+
+            try {
+                const studentRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', studentId);
+                await updateDoc(studentRef, { scores: updatedScores });
+            } catch (err) {
+                console.error("Error updating star:", err);
+                showModal('خطأ', 'تعذر حفظ النجمة، يرجى التحقق من اتصال الإنترنت.', 'error');
+            }
+        };
+
+        // Add Student to Firestore (Teacher Only)
+        window.addStudent = async function(event) {
+            event.preventDefault();
+            if (!isTeacherMode) return;
+
+            const input = document.getElementById('newStudentName');
+            const btn = document.getElementById('addStudentBtn');
+            const name = input.value.trim();
+            if (!name) return;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
+
+            if (!useCloudStorage || !currentUser) {
+                allStudents.push({
+                    id: 'stu_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                    name: name,
+                    className: activeClass,
+                    createdAt: Date.now(),
+                    scores: { w1: false, w2: false, w3: false, w4: false, w5: false, w6: false, w7: false, w8: false }
+                });
+                saveLocalFallback();
+                renderAll();
+                input.value = '';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-plus"></i> إضافة طالبة';
+                showModal('تم الحفظ', `تمت إضافة الطالبة (${name}) بنجاح إلى فصل ${activeClass}.`, 'success');
+                return;
+            }
+
+            try {
+                const studentsCol = collection(db, 'artifacts', appId, 'public', 'data', 'students');
+                await addDoc(studentsCol, {
+                    name: name,
+                    className: activeClass,
+                    createdAt: Date.now(),
+                    scores: { w1: false, w2: false, w3: false, w4: false, w5: false, w6: false, w7: false, w8: false }
+                });
+                input.value = '';
+                showModal('تم الحفظ', `تمت إضافة الطالبة (${name}) بنجاح إلى فصل ${activeClass}.`, 'success');
+            } catch (err) {
+                console.error("Error adding student:", err);
+                showModal('خطأ', 'حدث خطأ أثناء حفظ اسم الطالبة.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-plus"></i> إضافة طالبة';
+            }
+        };
+
+        // Delete Student from Firestore (Teacher Only)
+        window.confirmDeleteStudent = function(studentId, studentName) {
+            if (!isTeacherMode) return;
+            showModal('تأكيد الحذف', `هل أنتِ متأكدة من حذف الطالبة "${studentName}" وجميع نجومها؟`, 'confirm', async () => {
+                if (!useCloudStorage || !currentUser) {
+                    allStudents = allStudents.filter(s => s.id !== studentId);
+                    saveLocalFallback();
+                    renderAll();
+                    closeModal();
+                    return;
+                }
+
+                try {
+                    const studentRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', studentId);
+                    await deleteDoc(studentRef);
+                    closeModal();
+                } catch (err) {
+                    closeModal();
+                    showModal('خطأ', 'تعذر حذف الطالبة.', 'error');
+                }
+            });
+        };
+
+        // Render Students Management Table (Tab 2)
+        function renderStudentsTable() {
+            const tbody = document.getElementById('studentsTableBody');
+            tbody.innerHTML = '';
+            const students = getClassStudents();
+
+            if (students.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-slate-400 font-medium">لا توجد طالبات مضافات في هذا الفصل.</td></tr>`;
+                return;
+            }
+
+            students.forEach((student, index) => {
+                let total = Object.values(student.scores || {}).filter(Boolean).length;
+                let tr = document.createElement('tr');
+                tr.className = index % 2 === 0 ? 'bg-white hover:bg-slate-50' : 'bg-slate-50/50 hover:bg-slate-50';
+
+                tr.innerHTML = `
+                    <td class="p-3 text-center font-bold text-slate-400">${index + 1}</td>
+                    <td class="p-3 font-bold text-slate-800">${student.name}</td>
+                    <td class="p-3 text-center font-bold text-purple-700">${total} نجوم</td>
+                    <td class="p-3 text-center">
+                        <button onclick="confirmDeleteStudent('${student.id}', '${student.name.replace(/'/g, "\\'")}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-xl text-xs font-bold transition">
+                            <i class="fa-solid fa-trash-can"></i> حذف
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Render Parents View / Leaderboard (Tab 3)
+        function renderParentsTable() {
+            document.getElementById('reportClassName').innerText = activeClass;
+            const tbody = document.getElementById('parentsTableBody');
+            tbody.innerHTML = '';
+            const students = getClassStudents();
+
+            if (students.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-slate-400 font-medium">لا توجد بيانات عرض حالياً لهذا الفصل.</td></tr>`;
+                return;
+            }
+
+            let sortedStudents = [...students].sort((a, b) => {
+                let starsA = Object.values(a.scores || {}).filter(Boolean).length;
+                let starsB = Object.values(b.scores || {}).filter(Boolean).length;
+                return starsB - starsA;
+            });
+
+            sortedStudents.forEach((student, index) => {
+                let total = Object.values(student.scores || {}).filter(Boolean).length;
+                let badge = '';
+                if (total >= 7) badge = '<span class="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-black">🌟 نجمة القاموس الذهبية</span>';
+                else if (total >= 4) badge = '<span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs font-bold">⭐ طالبة متميزة</span>';
+                else if (total >= 1) badge = '<span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-semibold">✨ في الطريق للتألق</span>';
+                else badge = '<span class="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-xs">مشاركة مستمرة</span>';
+
+                let rankDisplay = index + 1;
+                if (index === 0 && total > 0) rankDisplay = '🥇';
+                else if (index === 1 && total > 0) rankDisplay = '🥈';
+                else if (index === 2 && total > 0) rankDisplay = '🥉';
+
+                let tr = document.createElement('tr');
+                tr.className = index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50';
+
+                tr.innerHTML = `
+                    <td class="p-3 text-center font-bold text-slate-600 text-base">${rankDisplay}</td>
+                    <td class="p-3 font-bold text-slate-800">${student.name}</td>
+                    <td class="p-3 text-center font-black text-purple-700">${total} / 8</td>
+                    <td class="p-3 text-center">${badge}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Save Custom Firebase Config from UI
+        window.saveCustomFirebaseConfig = function() {
+            const raw = document.getElementById('firebaseConfigInput').value.trim();
+            if (!raw) return;
+            try {
+                // Allow pasting JS object format or strict JSON
+                const cleaned = raw.replace(/^[^{]*/, '').replace(/[^}]*$/, '');
+                const parsed = JSON.parse(cleaned);
+                if (!parsed.apiKey || !parsed.projectId) {
+                    throw new Error("Missing keys");
+                }
+                localStorage.setItem(LOCAL_FB_CONFIG_KEY, JSON.stringify(parsed));
+                showModal('تم الربط بنجاح!', 'تم حفظ إعدادات قاعدة البيانات السحابية. سيتم تحديث الصفحة الآن لتفعيل الحفظ المباشر للجميع.', 'success');
+                setTimeout(() => window.location.reload(), 1500);
+            } catch (e) {
+                showModal('صيغة غير صحيحة', 'تأكدي من لصق كود firebaseConfig بصيغة JSON صحيحة تحتوي على apiKey و projectId.', 'error');
+            }
+        };
+
+        // Export Backup JSON
+        window.exportData = function() {
+            const dataToExport = {
+                exportedAt: new Date().toISOString(),
+                students: allStudents
+            };
+            const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'My_Little_Dictionary_Backup_' + new Date().toISOString().slice(0, 10) + '.json';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        };
+
+        // Copy Magic Link with all students & stars encoded in the URL
+        window.copyMagicLink = function() {
+            const jsonStr = JSON.stringify(allStudents);
+            const encoded = btoa(unescape(encodeURIComponent(jsonStr)));
+            const baseUrl = window.location.href.split('#')[0];
+            const magicUrl = baseUrl + '#data=' + encoded;
+
+            // Update current browser hash too so refreshing keeps it!
+            window.location.hash = 'data=' + encoded;
+
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = magicUrl;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            tempTextArea.remove();
+            showModal('تم نسخ الرابط الذكي!', 'هذا الرابط يحمل بداخله جميع أسماء الطالبات ونجومهن! أرسليه للأمهات أو افتحيه في أي وقت ولن تضيع البيانات أبداً.', 'success');
+        };
+
+        // Download Standalone HTML with Embedded Data
+        window.downloadStandaloneHTML = function() {
+            const currentHTML = document.documentElement.outerHTML;
+            const serializedData = JSON.stringify(allStudents, null, 12);
+            const updatedHTML = '<!DOCTYPE html>\n' + currentHTML.replace(
+                /const EMBEDDED_INITIAL_DATA = \[[\s\S]*?\];/,
+                `const EMBEDDED_INITIAL_DATA = ${serializedData};`
+            );
+            const blob = new Blob([updatedHTML], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'My_Little_Dictionary_Saved_' + new Date().toISOString().slice(0,10) + '.html';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            showModal('تم الحفظ بنجاح', 'تم تنزيل ملف الموقع وبداخله جميع الأسماء والنجوم! عند فتح هذا الملف ستجدين كل بياناتك محفوظة ولن تختفي أبداً.', 'success');
+        };
+
+        // Copy Embedded Data Snippet to Clipboard
+        window.copyEmbeddedDataCode = function() {
+            const serializedData = JSON.stringify(allStudents, null, 12);
+            const codeSnippet = `const EMBEDDED_INITIAL_DATA = ${serializedData};`;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeSnippet;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            tempTextArea.remove();
+            showModal('تم النسخ!', 'تم نسخ كود الطالبات والنجوم. يمكنكِ الآن فتح محرر الكود واستبدال سطر EMBEDDED_INITIAL_DATA به ليُحفظ للأبد.', 'success');
+        };
+
+        // Import Backup JSON
+        window.importData = function(event) {
+            if (!isTeacherMode) return;
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    const list = parsed.students || [];
+                    if (!Array.isArray(list)) throw new Error('Invalid format');
+
+                    if (!useCloudStorage || !currentUser) {
+                        for (const item of list) {
+                            if (item.name && item.className) {
+                                allStudents.push({
+                                    id: item.id || ('stu_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)),
+                                    name: item.name,
+                                    className: item.className,
+                                    createdAt: item.createdAt || Date.now(),
+                                    scores: item.scores || { w1: false, w2: false, w3: false, w4: false, w5: false, w6: false, w7: false, w8: false }
+                                });
+                            }
+                        }
+                        saveLocalFallback();
+                        renderAll();
+                        showModal('تم الاستيراد', 'تم رفع البيانات وحفظها بنجاح!', 'success');
+                        return;
+                    }
+
+                    const studentsCol = collection(db, 'artifacts', appId, 'public', 'data', 'students');
+                    for (const item of list) {
+                        if (item.name && item.className) {
+                            await addDoc(studentsCol, {
+                                name: item.name,
+                                className: item.className,
+                                createdAt: item.createdAt || Date.now(),
+                                scores: item.scores || { w1: false, w2: false, w3: false, w4: false, w5: false, w6: false, w7: false, w8: false }
+                            });
+                        }
+                    }
+                    showModal('تم الاستيراد', 'تم رفع البيانات وحفظها في قاعدة البيانات بنجاح!', 'success');
+                } catch (err) {
+                    showModal('خطأ في الملف', 'الملف المرفوع غير صالح أو تالف.', 'error');
+                }
+            };
+            reader.readAsText(file);
+        };
+
+        // Custom Modal Controller
+        window.showModal = function(title, message, type = 'success', onConfirm = null) {
+            const modal = document.getElementById('customModal');
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = message;
+            
+            const iconEl = document.getElementById('modalIcon');
+            const buttonsEl = document.getElementById('modalButtons');
+
+            if (type === 'success') {
+                iconEl.className = 'w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl mb-4 mx-auto';
+                iconEl.innerHTML = '<i class="fa-solid fa-check"></i>';
+                buttonsEl.innerHTML = '<button onclick="closeModal()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-5 py-2 rounded-xl text-sm transition shadow-sm">حسناً</button>';
+            } else if (type === 'error') {
+                iconEl.className = 'w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xl mb-4 mx-auto';
+                iconEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                buttonsEl.innerHTML = '<button onclick="closeModal()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-5 py-2 rounded-xl text-sm transition shadow-sm">حسناً</button>';
+            } else if (type === 'confirm') {
+                iconEl.className = 'w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xl mb-4 mx-auto';
+                iconEl.innerHTML = '<i class="fa-solid fa-circle-question"></i>';
+                buttonsEl.innerHTML = `
+                    <button onclick="closeModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-4 py-2 rounded-xl text-sm transition">إلغاء</button>
+                    <button id="modalConfirmBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2 rounded-xl text-sm transition shadow-sm">تأكيد الحذف</button>
+                `;
+                if (onConfirm) {
+                    document.getElementById('modalConfirmBtn').onclick = onConfirm;
+                }
+            }
+
+            modal.classList.remove('hidden');
+        };
+
+        window.closeModal = function() {
+            document.getElementById('customModal').classList.add('hidden');
+        };
+
+        // Start App
+        initApp();
+    </script>
+</body>
+</html>
