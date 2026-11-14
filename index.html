@@ -90,7 +90,7 @@
                 <span id="modeBannerText">وضع المشاهدة للأمهات والزوار: يمكنكِ الاطلاع على نجوم وتقدم الطالبات مباشرة.</span>
             </div>
             <div id="syncStatus" class="text-xs font-semibold flex items-center gap-1.5 bg-white px-3 py-1 rounded-full shadow-sm text-emerald-600">
-                <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> <span id="syncText">متصل ومُحدّث تلقائياً</span>
+                <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> <span id="syncText">متصل بسحابة Google Sheets</span>
             </div>
         </div>
 
@@ -107,7 +107,7 @@
                 <i class="fa-solid fa-users-gear"></i> إدارة الطالبات (إضافة / حذف)
             </button>
             <button onclick="switchTab('backup')" id="btn-backup" class="teacher-only hidden tab-btn px-5 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2 bg-slate-100 text-slate-600 hover:bg-slate-200">
-                <i class="fa-solid fa-database"></i> النسخ الاحتياطي والإعدادات
+                <i class="fa-solid fa-database"></i> إعدادات Google Sheets والنسخ الاحتياطي
             </button>
         </div>
 
@@ -130,7 +130,7 @@
         <!-- Loading Spinner -->
         <div id="loadingIndicator" class="text-center py-12 bg-white rounded-2xl shadow-sm border border-slate-100 mb-6">
             <i class="fa-solid fa-spinner fa-spin text-4xl text-purple-600 mb-3"></i>
-            <p class="font-bold text-slate-600">جاري تحميل بيانات الطالبات والنجوم...</p>
+            <p class="font-bold text-slate-600">جاري الاتصال بقاعدة بيانات Google Sheets وجلب البيانات...</p>
         </div>
 
         <!-- TAB 1: WEEKLY TRACKING -->
@@ -190,7 +190,7 @@
                         <h2 class="text-xl font-black text-slate-800 flex items-center gap-2">
                             <i class="fa-solid fa-user-plus text-purple-500"></i> إدارة طالبات الفصل (<span id="manageClassNameTitle">رابع / 1</span>)
                         </h2>
-                        <p class="text-sm text-slate-500">أضيفي أسماء الطالبات للفصل الحالي وسيتم حفظها مباشرة وتظهر للأمهات للمشاهدة فقط.</p>
+                        <p class="text-sm text-slate-500">أضيفي أسماء الطالبات للفصل الحالي وسيتم حفظها في Google Sheets فوراً لتظهر للجميع.</p>
                     </div>
                 </div>
 
@@ -276,14 +276,105 @@
             </div>
         </div>
 
-        <!-- TAB 4: BACKUP & SETTINGS (TEACHER ONLY) -->
+        <!-- TAB 4: GOOGLE SHEETS & SETTINGS (TEACHER ONLY) -->
         <div id="tab-backup" class="tab-content hidden space-y-6">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-6">
                 <div>
                     <h2 class="text-xl font-black text-slate-800 flex items-center gap-2">
-                        <i class="fa-solid fa-database text-purple-500"></i> النسخ الاحتياطي وإعدادات المعلمة
+                        <i class="fa-solid fa-database text-purple-500"></i> إعدادات Google Sheets والرمز السري
                     </h2>
-                    <p class="text-sm text-slate-500 mt-1">تصدير نسخة احتياطية أو تغيير الرمز السري الخاص بكِ كمعلمة.</p>
+                    <p class="text-sm text-slate-500 mt-1">ربط الموقع بملف Google Sheets سحابياً وتغيير الرمز السري للمعلمة.</p>
+                </div>
+
+                <!-- Google Sheets Link Section -->
+                <div class="bg-emerald-50 p-5 rounded-2xl border border-emerald-200 space-y-3">
+                    <h3 class="font-bold text-emerald-900 flex items-center gap-2">
+                        <i class="fa-solid fa-file-excel text-emerald-600"></i> ربط ملف Google Sheets
+                    </h3>
+                    <p class="text-xs text-emerald-800 leading-relaxed">
+                        1. أنشئي جدول بيانات جديد في Google Sheets.<br>
+                        2. من القائمة اختاري <strong>Extensions > Apps Script</strong> والصقي كود البرمجة (Apps Script) المذكور في الأسفل.<br>
+                        3. اضغطي على <strong>Deploy > New deployment</strong> (اختر Web app، و Execute as: Me، و Who has access: Anyone)، ثم انسخي رابط الويب (Web App URL) والصقيه هنا:
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-2 pt-1">
+                        <input type="text" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/.../exec" 
+                            class="flex-1 bg-white border border-emerald-300 rounded-xl px-4 py-2.5 text-xs font-mono text-left dir-ltr focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <button onclick="saveScriptUrl()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-5 py-2.5 rounded-xl text-xs transition">
+                            حفظ وتفعيل الربط
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Apps Script Code Accordion / Box -->
+                <div class="bg-slate-900 text-slate-100 p-5 rounded-2xl border border-slate-800 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-sm text-amber-400 flex items-center gap-2">
+                            <i class="fa-solid fa-code"></i> كود Google Apps Script (يُنسخ ويلصق في ملف الشيت):
+                        </h4>
+                        <button onclick="copyAppsScriptCode()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-slate-700">
+                            <i class="fa-solid fa-copy text-amber-400"></i> نسخ الكود
+                        </button>
+                    </div>
+                    <pre id="appsScriptCodeSnippet" class="text-[11px] font-mono bg-slate-950 p-4 rounded-xl overflow-x-auto text-emerald-300 dir-ltr text-left max-h-48">
+function doGet(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var rows = sheet.getDataRange().getValues();
+  var data = [];
+  // Skip header row if exists
+  for (var i = 1; i < rows.length; i++) {
+    if (rows[i][0]) {
+      data.push({
+        id: rows[i][0],
+        name: rows[i][1],
+        className: rows[i][2],
+        createdAt: Number(rows[i][3]) || Date.now(),
+        scores: {
+          w1: rows[i][4] === true || rows[i][4] === "true",
+          w2: rows[i][5] === true || rows[i][5] === "true",
+          w3: rows[i][6] === true || rows[i][6] === "true",
+          w4: rows[i][7] === true || rows[i][7] === "true",
+          w5: rows[i][8] === true || rows[i][8] === "true",
+          w6: rows[i][9] === true || rows[i][9] === "true",
+          w7: rows[i][10] === true || rows[i][10] === "true",
+          w8: rows[i][11] === true || rows[i][11] === "true"
+        }
+      });
+    }
+  }
+  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  var lock = LockService.getScriptLock();
+  lock.tryLock(10000);
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var payload = JSON.parse(e.postData.contents);
+    
+    // Clear and write header
+    sheet.clear();
+    sheet.appendRow(["ID", "Name", "ClassName", "CreatedAt", "w1", "w2", "w3", "w4", "w5", "w6", "w7", "w8"]);
+    
+    var students = payload.students || [];
+    for (var i = 0; i < students.length; i++) {
+      var s = students[i];
+      var sc = s.scores || {};
+      sheet.appendRow([
+        s.id,
+        s.name,
+        s.className,
+        s.createdAt,
+        !!sc.w1, !!sc.w2, !!sc.w3, !!sc.w4, !!sc.w5, !!sc.w6, !!sc.w7, !!sc.w8
+      ]);
+    }
+    return ContentService.createTextOutput(JSON.stringify({status: "success"})).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({status: "error", message: err.toString()})).setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock();
+  }
+}
+                    </pre>
                 </div>
 
                 <!-- Change PIN Section -->
@@ -308,7 +399,7 @@
                             <h3 class="font-bold text-slate-800 mb-1 flex items-center gap-2">
                                 <i class="fa-solid fa-file-arrow-down text-indigo-600"></i> تصدير البيانات (ملف احتياطي)
                             </h3>
-                            <p class="text-xs text-slate-500 mb-4">تنزيل ملف JSON يحتوي على جميع أسماء الطالبات والنجوم لجميع الفصول.</p>
+                            <p class="text-xs text-slate-500 mb-4">تنزيل ملف JSON يحتوي على جميع أسماء الطالبات والنجوم.</p>
                         </div>
                         <button onclick="exportData()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-sm">
                             <i class="fa-solid fa-download"></i> تحميل نسخة احتياطية
@@ -324,36 +415,9 @@
                             <p class="text-xs text-slate-500 mb-4">رفع ملف نسخة احتياطية سابق لاستعادة جميع الأسماء والدرجات.</p>
                         </div>
                         <label class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-sm cursor-pointer">
-                            <i class="fa-solid fa-upload"></i> اختيار ملف واستيراد
+                            <i class="fa-solid fa-upload"></i> اختيار ملف والاستيراد
                             <input type="file" id="importFile" accept=".json" onchange="importData(event)" class="hidden">
                         </label>
-                    </div>
-
-                    <!-- Permanent HTML Export Box (Solves Preview Reset Permanently) -->
-                    <div class="bg-amber-50 p-5 rounded-2xl border border-amber-200 flex flex-col justify-between md:col-span-2">
-                        <div>
-                            <h3 class="font-bold text-amber-900 mb-1 flex items-center gap-2">
-                                <i class="fa-solid fa-cloud-arrow-up text-amber-600"></i> ربط قاعدة بيانات سحابية دائمة (للنشر على الإنترنت)
-                            </h3>
-                            <p class="text-xs text-amber-800 mb-3">إذا رفعتِ الموقع على استضافة مجانية (مثل Netlify أو GitHub Pages)، يمكنكِ لصق إعدادات مشروعكِ المجاني من Firebase هنا ليحفظ كل نجمة تضعينها وتظهر للزوار فوراً، أو استخدام الرابط الذكي أدناه:</p>
-                        </div>
-                        <div class="space-y-3">
-                            <div class="flex flex-col sm:flex-row gap-2">
-                                <input type="text" id="firebaseConfigInput" placeholder='الصقي كود firebaseConfig هنا (مثال: {"apiKey":"...","projectId":"..."})' 
-                                    class="flex-1 bg-white border border-amber-300 rounded-xl px-4 py-2 text-xs font-mono text-left dir-ltr focus:outline-none focus:ring-2 focus:ring-amber-500">
-                                <button onclick="saveCustomFirebaseConfig()" class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-4 py-2 rounded-xl text-xs transition whitespace-nowrap">
-                                    ربط وحفظ الإعدادات
-                                </button>
-                            </div>
-                            <div class="flex flex-wrap gap-3 pt-2 border-t border-amber-200/60">
-                                <button onclick="copyMagicLink()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-5 py-2 rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-sm">
-                                    <i class="fa-solid fa-share-nodes"></i> نسخ الرابط المحفوظ بالأسماء والنجوم
-                                </button>
-                                <button onclick="downloadStandaloneHTML()" class="bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold px-4 py-2 rounded-xl text-xs transition flex items-center justify-center gap-2">
-                                    <i class="fa-solid fa-floppy-disk"></i> تنزيل ملف الموقع محفوظاً (HTML)
-                                </button>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -395,228 +459,140 @@
         </div>
     </div>
 
-    <!-- Firebase SDK & Application Logic -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, addDoc, updateDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
+    <!-- Application Script Logic -->
+    <script>
         // Global State
-        let db = null;
-        let auth = null;
-        let currentUser = null;
         let isTeacherMode = false;
         let currentTab = 'tracking';
         let activeClass = 'رابع / 1';
         let teacherPin = '1234';
-        let useCloudStorage = false;
+        let scriptUrl = localStorage.getItem('my_little_dict_script_url') || '';
 
         const LOCAL_STORAGE_KEY = 'my_little_dict_students_v1';
         const LOCAL_PIN_KEY = 'my_little_dict_pin_v1';
-        const LOCAL_FB_CONFIG_KEY = 'my_little_dict_fb_config_v1';
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'my-little-dictionary-app';
-        let firebaseConfig = null;
-
-        // =========================================================================
-        // 📌 أسهل طريقة لحفظ الأسماء في الكود للأبد:
-        // اكتبي أسماء طالبات كل فصل بين علامتي التنصيص "" وافصلي بينهن بفاصلة ، أو ,
-        // =========================================================================
-        const قائمة_طالبات_الفصول = {
-            "رابع / 1": [
-                // مثال: "سارة أحمد محمد", "نورة عبدالله العتيبي",
-            ],
-            "رابع / 2": [
-                // اكتبي أسماء طالبات رابع 2 هنا
-            ],
-            "رابع / 3": [
-                // اكتبي أسماء طالبات رابع 3 هنا
-            ]
-        };
-
-        // بيانات تفصيلية (تُحدّث تلقائياً عند نسخ الكود)
-        const EMBEDDED_INITIAL_DATA = [];
-
-        // 📌 ضعي إعدادات Firebase هنا إذا كنتِ سترفعين الموقع على الإنترنت ليحفظ السحابي تلقائياً للجميع:
-        const CUSTOM_FIREBASE_CONFIG = null; 
-        // =========================================================================
-
-        // Resolve Firebase Config from Environment, Custom Code, or Saved Settings
-        try {
-            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-                firebaseConfig = JSON.parse(__firebase_config);
-            } else if (CUSTOM_FIREBASE_CONFIG) {
-                firebaseConfig = CUSTOM_FIREBASE_CONFIG;
-            } else {
-                const savedFb = localStorage.getItem(LOCAL_FB_CONFIG_KEY);
-                if (savedFb) firebaseConfig = JSON.parse(savedFb);
-            }
-            if (firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId) {
-                useCloudStorage = true;
-            }
-        } catch (e) {
-            console.warn("Firebase config parse error:", e);
-        }
-
-        function buildInitialStudents() {
-            // 1. Check if data is passed inside the URL (#data=...)
-            try {
-                if (window.location.hash && window.location.hash.startsWith('#data=')) {
-                    const encoded = window.location.hash.substring(6);
-                    const decodedJson = decodeURIComponent(escape(atob(encoded)));
-                    const parsedUrlData = JSON.parse(decodedJson);
-                    if (Array.isArray(parsedUrlData) && parsedUrlData.length > 0) {
-                        return parsedUrlData;
-                    }
-                }
-            } catch (e) {
-                console.warn("URL data parse error:", e);
-            }
-
-            // 2. Check detailed embedded data
-            if (EMBEDDED_INITIAL_DATA.length > 0) {
-                return [...EMBEDDED_INITIAL_DATA];
-            }
-
-            // 3. Build from simple Arabic class lists above
-            const generated = [];
-            let idx = 1;
-            for (const [clsName, namesList] of Object.entries(قائمة_طالبات_الفصول)) {
-                if (Array.isArray(namesList)) {
-                    namesList.forEach(name => {
-                        if (name && name.trim()) {
-                            generated.push({
-                                id: 'fixed_stu_' + idx++,
-                                name: name.trim(),
-                                className: clsName,
-                                createdAt: idx,
-                                scores: { w1: false, w2: false, w3: false, w4: false, w5: false, w6: false, w7: false, w8: false }
-                            });
-                        }
-                    });
-                }
-            }
-            return generated;
-        }
-
-        let allStudents = buildInitialStudents();
-
-        function saveLocalFallback() {
-            try {
-                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(allStudents));
-                localStorage.setItem(LOCAL_PIN_KEY, teacherPin);
-            } catch (e) {
-                console.error("Local save error:", e);
-            }
-        }
+        // Initial Sample Data if sheet is empty or offline
+        let allStudents = [
+            { id: 's1', name: 'سارة أحمد محمد', className: 'رابع / 1', createdAt: 1, scores: { w1: true, w2: false, w3: false, w4: false, w5: false, w6: false, w7: false, w8: false } },
+            { id: 's2', name: 'نورة عبدالله العتيبي', className: 'رابع / 1', createdAt: 2, scores: { w1: true, w2: true, w3: false, w4: false, w5: false, w6: false, w7: false, w8: false } },
+            { id: 's3', name: 'جود خالد القحطاني', className: 'رابع / 2', createdAt: 3, scores: { w1: false, w2: false, w3: false, w4: false, w5: false, w6: false, w7: false, w8: false } },
+            { id: 's4', name: 'لين فيصل الشمري', className: 'رابع / 3', createdAt: 4, scores: { w1: true, w2: true, w3: true, w4: false, w5: false, w6: false, w7: false, w8: false } }
+        ];
 
         async function initApp() {
             // Set Date
             const options = { year: 'numeric', month: 'long', day: 'numeric' };
             document.getElementById('currentDate').innerText = new Date().toLocaleDateString('ar-SA', options);
 
-            if (!useCloudStorage) {
-                updateSyncIndicator(false);
-                loadLocalFallback();
-                return;
-            }
+            const savedPin = localStorage.getItem(LOCAL_PIN_KEY);
+            if (savedPin) teacherPin = savedPin;
 
-            try {
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-
-                // Authenticate First (Rule 3)
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        currentUser = user;
-                        updateSyncIndicator(true);
-                        setupRealtimeListeners();
-                    }
-                });
-            } catch (error) {
-                console.error("Firebase Init Error, switching to local mode:", error);
-                useCloudStorage = false;
-                updateSyncIndicator(false);
-                loadLocalFallback();
-            }
-        }
-
-        function updateSyncIndicator(isCloud) {
-            const syncText = document.getElementById('syncText');
-            const syncDot = document.getElementById('syncDot');
-            if (isCloud) {
-                syncText.innerText = 'متصل بالسحابة (يُحفظ ويظهر للجميع فوراً)';
-                syncDot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+            if (scriptUrl) {
+                document.getElementById('scriptUrlInput').value = scriptUrl;
+                await fetchFromGoogleSheet();
             } else {
-                syncText.innerText = 'حفظ محلي (اربطي قاعدة بيانات للنشر العام)';
-                syncDot.className = 'w-2 h-2 rounded-full bg-amber-500';
+                // Load local fallback if no script URL yet
+                const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (savedData) {
+                    try {
+                        const parsed = JSON.parse(savedData);
+                        if (Array.isArray(parsed) && parsed.length > 0) allStudents = parsed;
+                    } catch (e) {}
+                }
+                document.getElementById('loadingIndicator').classList.add('hidden');
+                document.getElementById('tab-' + currentTab).classList.remove('hidden');
+                renderAll();
             }
         }
 
-        // Listen to Public Data (Rule 1 & Rule 2)
-        function setupRealtimeListeners() {
-            if (!currentUser) return;
-
-            // 1. Listen to Teacher PIN Settings
-            const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config');
-            onSnapshot(settingsRef, (docSnap) => {
-                if (docSnap.exists() && docSnap.data().pin) {
-                    teacherPin = docSnap.data().pin;
+        // Fetch Data from Google Sheets Web App
+        async function fetchFromGoogleSheet() {
+            if (!scriptUrl) return;
+            try {
+                const response = await fetch(scriptUrl);
+                const data = await response.json();
+                if (Array.isArray(data)) {
+                    allStudents = data;
+                    saveLocalFallback(); // Cache locally as backup
                 }
-            }, (err) => console.error("Settings listener error:", err));
-
-            // 2. Listen to Students Collection
-            const studentsCol = collection(db, 'artifacts', appId, 'public', 'data', 'students');
-            onSnapshot(studentsCol, async (snapshot) => {
-                // If cloud is empty on first run, seed initial embedded students if any
-                if (snapshot.empty && allStudents.length > 0 && isTeacherMode) {
-                    for (const stu of allStudents) {
-                        await addDoc(studentsCol, {
-                            name: stu.name,
-                            className: stu.className,
-                            createdAt: stu.createdAt || Date.now(),
-                            scores: stu.scores || { w1: false, w2: false, w3: false, w4: false, w5: false, w6: false, w7: false, w8: false }
-                        });
-                    }
-                    return;
+            } catch (err) {
+                console.warn("Could not fetch from Google Sheet, using local cache:", err);
+                const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (savedData) {
+                    try { allStudents = JSON.parse(savedData); } catch (e) {}
                 }
-
-                allStudents = [];
-                snapshot.forEach((docSnap) => {
-                    allStudents.push({ id: docSnap.id, ...docSnap.data() });
-                });
-
-                // Sort by creation timestamp in memory (Rule 2)
-                allStudents.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-
+            } finally {
                 document.getElementById('loadingIndicator').classList.add('hidden');
                 if (document.querySelectorAll('.tab-content:not(.hidden)').length === 0) {
                     document.getElementById('tab-' + currentTab).classList.remove('hidden');
                 }
                 renderAll();
-            }, (error) => {
-                console.error("Students listener error:", error);
-                document.getElementById('loadingIndicator').innerHTML = '<p class="text-red-500 font-bold">حدث خطأ في جلب البيانات. يرجى تحديث الصفحة.</p>';
-            });
+            }
         }
+
+        // Sync Data to Google Sheets Web App
+        async function syncToGoogleSheet() {
+            if (!scriptUrl) {
+                saveLocalFallback();
+                return;
+            }
+            try {
+                await fetch(scriptUrl, {
+                    method: 'POST',
+                    mode: 'no-cors', // Apps Script standard CORS handling
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ students: allStudents })
+                });
+                saveLocalFallback();
+            } catch (err) {
+                console.error("Sync to Google Sheet failed:", err);
+                saveLocalFallback();
+            }
+        }
+
+        function saveLocalFallback() {
+            try {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(allStudents));
+                localStorage.setItem(LOCAL_PIN_KEY, teacherPin);
+            } catch (e) {}
+        }
+
+        window.saveScriptUrl = async function() {
+            const val = document.getElementById('scriptUrlInput').value.trim();
+            if (!val.startsWith('https://script.google.com')) {
+                showModal('تنبيه', 'الرجاء إدخال رابط صحيح لـ Google Apps Script Web App يبدأ بـ https://script.google.com', 'error');
+                return;
+            }
+            scriptUrl = val;
+            localStorage.setItem('my_little_dict_script_url', scriptUrl);
+            document.getElementById('loadingIndicator').classList.remove('hidden');
+            document.getElementById('loadingIndicator').innerHTML = '<i class="fa-solid fa-spinner fa-spin text-4xl text-emerald-600 mb-3"></i><p class="font-bold text-slate-600">جاري الاتصال بملف Google Sheets...</p>';
+            
+            // Push current local data to initialize sheet if empty
+            await syncToGoogleSheet();
+            await fetchFromGoogleSheet();
+            showModal('تم الربط بنجاح!', 'تم ربط الموقع بملف Google Sheets بنجاح، وتحديث البيانات لجميع الزوار.', 'success');
+        };
+
+        window.copyAppsScriptCode = function() {
+            const codeText = document.getElementById('appsScriptCodeSnippet').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeText;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            tempTextArea.remove();
+            showModal('تم النسخ!', 'تم نسخ كود Apps Script بنجاح. الصقه في محرر الأكواد داخل ملف Google Sheets الخاص بك.', 'success');
+        };
 
         // Teacher Auth Controls
         window.handleTeacherAuthClick = function() {
             if (isTeacherMode) {
-                // Logout from Teacher Mode
                 isTeacherMode = false;
                 updateUIForRole();
                 switchTab('tracking');
                 showModal('تم الخروج', 'تم العودة إلى وضع المشاهدة فقط.', 'success');
             } else {
-                // Open Login Modal
                 document.getElementById('pinInput').value = '';
                 document.getElementById('pinErrorMsg').classList.add('hidden');
                 document.getElementById('loginModal').classList.remove('hidden');
@@ -641,29 +617,15 @@
             }
         };
 
-        window.updateTeacherPin = async function(e) {
+        window.updateTeacherPin = function(e) {
             e.preventDefault();
             if (!isTeacherMode) return;
             const newPin = document.getElementById('newPinInput').value.trim();
             if (newPin.length < 4) return;
-
-            if (!useCloudStorage || !currentUser) {
-                teacherPin = newPin;
-                saveLocalFallback();
-                document.getElementById('newPinInput').value = '';
-                showModal('تم التحديث', 'تم تغيير الرمز السري للمعلمة بنجاح.', 'success');
-                return;
-            }
-
-            try {
-                const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config');
-                await setDoc(settingsRef, { pin: newPin }, { merge: true });
-                teacherPin = newPin;
-                document.getElementById('newPinInput').value = '';
-                showModal('تم التحديث', 'تم تغيير الرمز السري للمعلمة بنجاح.', 'success');
-            } catch (err) {
-                showModal('خطأ', 'تعذر تحديث الرمز السري.', 'error');
-            }
+            teacherPin = newPin;
+            saveLocalFallback();
+            document.getElementById('newPinInput').value = '';
+            showModal('تم التحديث', 'تم تغيير الرمز السري للمعلمة بنجاح.', 'success');
         };
 
         function updateUIForRole() {
@@ -679,7 +641,7 @@
                 authIcon.className = 'fa-solid fa-lock-open';
                 authText.innerText = 'خروج المعلمة';
                 modeBanner.className = 'no-print mb-6 p-3.5 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-3 bg-emerald-50 border-emerald-200 text-emerald-800';
-                modeBannerText.innerText = 'وضع المعلمة مُفعّل: يمكنكِ إضافة الطالبات ومنح النجوم وسيتم حفظها مباشرة.';
+                modeBannerText.innerText = 'وضع المعلمة مُفعّل: يمكنكِ إضافة الطالبات ومنح النجوم وسيتم حفظها سحابياً في Google Sheets للجميع.';
                 teacherOnlyElements.forEach(el => el.classList.remove('hidden'));
             } else {
                 authBtn.className = 'no-print flex items-center gap-2 bg-white text-purple-700 hover:bg-purple-50 px-4 py-2.5 rounded-2xl font-bold text-sm shadow-md transition';
@@ -688,33 +650,6 @@
                 modeBanner.className = 'no-print mb-6 p-3.5 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-3 bg-blue-50 border-blue-200 text-blue-800';
                 modeBannerText.innerText = 'وضع المشاهدة للأمهات والزوار: يمكنكِ الاطلاع على نجوم وتقدم الطالبات مباشرة.';
                 teacherOnlyElements.forEach(el => el.classList.add('hidden'));
-            }
-            renderAll();
-        }
-
-        function loadLocalFallback() {
-            try {
-                const savedPin = localStorage.getItem(LOCAL_PIN_KEY);
-                if (savedPin) teacherPin = savedPin;
-
-                // Only override with localStorage if URL hash wasn't explicitly opened
-                const hasUrlData = window.location.hash && window.location.hash.startsWith('#data=');
-                if (!hasUrlData) {
-                    const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-                    if (savedData) {
-                        const parsed = JSON.parse(savedData);
-                        if (Array.isArray(parsed) && parsed.length > 0) {
-                            allStudents = parsed;
-                        }
-                    }
-                }
-            } catch (e) {
-                console.error("Local read error:", e);
-            }
-            allStudents.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-            document.getElementById('loadingIndicator').classList.add('hidden');
-            if (document.querySelectorAll('.tab-content:not(.hidden)').length === 0) {
-                document.getElementById('tab-' + currentTab).classList.remove('hidden');
             }
             renderAll();
         }
@@ -817,7 +752,7 @@
             document.getElementById('classTotalStars').innerText = `إجمالي نجوم الفصل: ${classStarsCount}`;
         }
 
-        // Toggle Star in Firestore (Teacher Only)
+        // Toggle Star & Sync to Google Sheet
         window.toggleStar = async function(studentId, weekKey, event) {
             if (!isTeacherMode) return;
             const student = allStudents.find(s => s.id === studentId);
@@ -825,7 +760,7 @@
 
             const currentScores = student.scores || {};
             const newValue = !currentScores[weekKey];
-            const updatedScores = { ...currentScores, [weekKey]: newValue };
+            student.scores = { ...currentScores, [weekKey]: newValue };
 
             // Trigger Confetti immediately for snappy UX
             if (newValue && event) {
@@ -841,23 +776,11 @@
                 });
             }
 
-            if (!useCloudStorage || !currentUser) {
-                student.scores = updatedScores;
-                saveLocalFallback();
-                renderAll();
-                return;
-            }
-
-            try {
-                const studentRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', studentId);
-                await updateDoc(studentRef, { scores: updatedScores });
-            } catch (err) {
-                console.error("Error updating star:", err);
-                showModal('خطأ', 'تعذر حفظ النجمة، يرجى التحقق من اتصال الإنترنت.', 'error');
-            }
+            renderAll();
+            await syncToGoogleSheet();
         };
 
-        // Add Student to Firestore (Teacher Only)
+        // Add Student & Sync to Google Sheet
         window.addStudent = async function(event) {
             event.preventDefault();
             if (!isTeacherMode) return;
@@ -868,64 +791,34 @@
             if (!name) return;
 
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ سحابياً...';
 
-            if (!useCloudStorage || !currentUser) {
-                allStudents.push({
-                    id: 'stu_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-                    name: name,
-                    className: activeClass,
-                    createdAt: Date.now(),
-                    scores: { w1: false, w2: false, w3: false, w4: false, w5: false, w6: false, w7: false, w8: false }
-                });
-                saveLocalFallback();
-                renderAll();
-                input.value = '';
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-plus"></i> إضافة طالبة';
-                showModal('تم الحفظ', `تمت إضافة الطالبة (${name}) بنجاح إلى فصل ${activeClass}.`, 'success');
-                return;
-            }
+            allStudents.push({
+                id: 'stu_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                name: name,
+                className: activeClass,
+                createdAt: Date.now(),
+                scores: { w1: false, w2: false, w3: false, w4: false, w5: false, w6: false, w7: false, w8: false }
+            });
 
-            try {
-                const studentsCol = collection(db, 'artifacts', appId, 'public', 'data', 'students');
-                await addDoc(studentsCol, {
-                    name: name,
-                    className: activeClass,
-                    createdAt: Date.now(),
-                    scores: { w1: false, w2: false, w3: false, w4: false, w5: false, w6: false, w7: false, w8: false }
-                });
-                input.value = '';
-                showModal('تم الحفظ', `تمت إضافة الطالبة (${name}) بنجاح إلى فصل ${activeClass}.`, 'success');
-            } catch (err) {
-                console.error("Error adding student:", err);
-                showModal('خطأ', 'حدث خطأ أثناء حفظ اسم الطالبة.', 'error');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-plus"></i> إضافة طالبة';
-            }
+            renderAll();
+            await syncToGoogleSheet();
+
+            input.value = '';
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-plus"></i> إضافة طالبة';
+            showModal('تم الحفظ', `تمت إضافة الطالبة (${name}) بنجاح إلى فصل ${activeClass} وحفظها في Google Sheets.`, 'success');
         };
 
-        // Delete Student from Firestore (Teacher Only)
+        // Delete Student & Sync to Google Sheet
         window.confirmDeleteStudent = function(studentId, studentName) {
             if (!isTeacherMode) return;
             showModal('تأكيد الحذف', `هل أنتِ متأكدة من حذف الطالبة "${studentName}" وجميع نجومها؟`, 'confirm', async () => {
-                if (!useCloudStorage || !currentUser) {
-                    allStudents = allStudents.filter(s => s.id !== studentId);
-                    saveLocalFallback();
-                    renderAll();
-                    closeModal();
-                    return;
-                }
-
-                try {
-                    const studentRef = doc(db, 'artifacts', appId, 'public', 'data', 'students', studentId);
-                    await deleteDoc(studentRef);
-                    closeModal();
-                } catch (err) {
-                    closeModal();
-                    showModal('خطأ', 'تعذر حذف الطالبة.', 'error');
-                }
+                allStudents = allStudents.filter(s => s.id !== studentId);
+                renderAll();
+                await syncToGoogleSheet();
+                closeModal();
+                showModal('تم الحذف', 'تم حذف الطالبة بنجاح.', 'success');
             });
         };
 
@@ -1003,25 +896,6 @@
             });
         }
 
-        // Save Custom Firebase Config from UI
-        window.saveCustomFirebaseConfig = function() {
-            const raw = document.getElementById('firebaseConfigInput').value.trim();
-            if (!raw) return;
-            try {
-                // Allow pasting JS object format or strict JSON
-                const cleaned = raw.replace(/^[^{]*/, '').replace(/[^}]*$/, '');
-                const parsed = JSON.parse(cleaned);
-                if (!parsed.apiKey || !parsed.projectId) {
-                    throw new Error("Missing keys");
-                }
-                localStorage.setItem(LOCAL_FB_CONFIG_KEY, JSON.stringify(parsed));
-                showModal('تم الربط بنجاح!', 'تم حفظ إعدادات قاعدة البيانات السحابية. سيتم تحديث الصفحة الآن لتفعيل الحفظ المباشر للجميع.', 'success');
-                setTimeout(() => window.location.reload(), 1500);
-            } catch (e) {
-                showModal('صيغة غير صحيحة', 'تأكدي من لصق كود firebaseConfig بصيغة JSON صحيحة تحتوي على apiKey و projectId.', 'error');
-            }
-        };
-
         // Export Backup JSON
         window.exportData = function() {
             const dataToExport = {
@@ -1039,60 +913,8 @@
             URL.revokeObjectURL(url);
         };
 
-        // Copy Magic Link with all students & stars encoded in the URL
-        window.copyMagicLink = function() {
-            const jsonStr = JSON.stringify(allStudents);
-            const encoded = btoa(unescape(encodeURIComponent(jsonStr)));
-            const baseUrl = window.location.href.split('#')[0];
-            const magicUrl = baseUrl + '#data=' + encoded;
-
-            // Update current browser hash too so refreshing keeps it!
-            window.location.hash = 'data=' + encoded;
-
-            const tempTextArea = document.createElement('textarea');
-            tempTextArea.value = magicUrl;
-            document.body.appendChild(tempTextArea);
-            tempTextArea.select();
-            document.execCommand('copy');
-            tempTextArea.remove();
-            showModal('تم نسخ الرابط الذكي!', 'هذا الرابط يحمل بداخله جميع أسماء الطالبات ونجومهن! أرسليه للأمهات أو افتحيه في أي وقت ولن تضيع البيانات أبداً.', 'success');
-        };
-
-        // Download Standalone HTML with Embedded Data
-        window.downloadStandaloneHTML = function() {
-            const currentHTML = document.documentElement.outerHTML;
-            const serializedData = JSON.stringify(allStudents, null, 12);
-            const updatedHTML = '<!DOCTYPE html>\n' + currentHTML.replace(
-                /const EMBEDDED_INITIAL_DATA = \[[\s\S]*?\];/,
-                `const EMBEDDED_INITIAL_DATA = ${serializedData};`
-            );
-            const blob = new Blob([updatedHTML], { type: 'text/html;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'My_Little_Dictionary_Saved_' + new Date().toISOString().slice(0,10) + '.html';
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(url);
-            showModal('تم الحفظ بنجاح', 'تم تنزيل ملف الموقع وبداخله جميع الأسماء والنجوم! عند فتح هذا الملف ستجدين كل بياناتك محفوظة ولن تختفي أبداً.', 'success');
-        };
-
-        // Copy Embedded Data Snippet to Clipboard
-        window.copyEmbeddedDataCode = function() {
-            const serializedData = JSON.stringify(allStudents, null, 12);
-            const codeSnippet = `const EMBEDDED_INITIAL_DATA = ${serializedData};`;
-            const tempTextArea = document.createElement('textarea');
-            tempTextArea.value = codeSnippet;
-            document.body.appendChild(tempTextArea);
-            tempTextArea.select();
-            document.execCommand('copy');
-            tempTextArea.remove();
-            showModal('تم النسخ!', 'تم نسخ كود الطالبات والنجوم. يمكنكِ الآن فتح محرر الكود واستبدال سطر EMBEDDED_INITIAL_DATA به ليُحفظ للأبد.', 'success');
-        };
-
-        // Import Backup JSON
-        window.importData = function(event) {
+        // Import Backup JSON & Sync
+        window.importData = async function(event) {
             if (!isTeacherMode) return;
             const file = event.target.files[0];
             if (!file) return;
@@ -1104,28 +926,10 @@
                     const list = parsed.students || [];
                     if (!Array.isArray(list)) throw new Error('Invalid format');
 
-                    if (!useCloudStorage || !currentUser) {
-                        for (const item of list) {
-                            if (item.name && item.className) {
-                                allStudents.push({
-                                    id: item.id || ('stu_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)),
-                                    name: item.name,
-                                    className: item.className,
-                                    createdAt: item.createdAt || Date.now(),
-                                    scores: item.scores || { w1: false, w2: false, w3: false, w4: false, w5: false, w6: false, w7: false, w8: false }
-                                });
-                            }
-                        }
-                        saveLocalFallback();
-                        renderAll();
-                        showModal('تم الاستيراد', 'تم رفع البيانات وحفظها بنجاح!', 'success');
-                        return;
-                    }
-
-                    const studentsCol = collection(db, 'artifacts', appId, 'public', 'data', 'students');
                     for (const item of list) {
                         if (item.name && item.className) {
-                            await addDoc(studentsCol, {
+                            allStudents.push({
+                                id: item.id || ('stu_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)),
                                 name: item.name,
                                 className: item.className,
                                 createdAt: item.createdAt || Date.now(),
@@ -1133,7 +937,9 @@
                             });
                         }
                     }
-                    showModal('تم الاستيراد', 'تم رفع البيانات وحفظها في قاعدة البيانات بنجاح!', 'success');
+                    renderAll();
+                    await syncToGoogleSheet();
+                    showModal('تم الاستيراد', 'تم رفع البيانات وحفظها سحابياً في Google Sheets بنجاح!', 'success');
                 } catch (err) {
                     showModal('خطأ في الملف', 'الملف المرفوع غير صالح أو تالف.', 'error');
                 }
